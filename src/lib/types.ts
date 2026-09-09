@@ -1,11 +1,2 @@
-export type UserRole = "USER" | "ADMIN";
-export type User = { id: string; name: string; email: string; role: UserRole; createdAt?: string };
-export type CategoryStatus = "ACTIVE" | "INACTIVE";
-export type Category = { id: string; name: string; status: CategoryStatus; isDeleted: boolean; createdAt: string; updatedAt: string };
-export type ProductStatus = "ACTIVE" | "OUT_OF_STOCK" | "INACTIVE";
-export type Product = { id: string; name: string; description?: string | null; price: number; stock: number; status: ProductStatus; categoryId: string; category?: Category; isDeleted: boolean; createdAt: string; updatedAt: string };
-export type OrderItem = { id: string; quantity: number; price: number; productId: string; product: Product };
-export type OrderStatus = "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-export type Order = { id: string; status: OrderStatus; totalPrice: number; userId: string; user?: User; orderItems: OrderItem[]; createdAt: string; updatedAt: string };
-export type Review = { id: string; rating: number; comment?: string | null; productId: string; userId: string; user?: Pick<User, "id" | "name">; product?: Pick<Product, "id" | "name">; createdAt: string; updatedAt: string };
-export type ApiEnvelope<T> = { success: boolean; message: string; data: T; errors?: Array<{ field: string; message: string }> };
+// Compatibility entry point; contracts live in src/types.
+export * from "../types";

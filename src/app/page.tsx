@@ -1,12 +1,17 @@
 "use client";
+import { Alert } from "@/components/ui/alert";
+import { StateCard } from "@/components/ui/state-card";
 
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest, getErrorMessage } from "@/lib/api";
+import { productsApi, categoriesApi, getErrorMessage } from "@/lib/api";
 import type { Category, Product } from "@/lib/types";
 import { getStoreImage, heroImage } from "@/lib/store-images";
-import { BuyProductButton } from "@/components/buy-product-button";
+import { ButtonLink } from "@/components/ui/button";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { Icon } from "@/components/ui/icon";
+import { ProductCard } from "@/components/products/product-card";
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -16,8 +21,8 @@ export default function HomePage() {
 
   useEffect(() => {
     Promise.all([
-      apiRequest<Category[]>("/api/categories"),
-      apiRequest<Product[]>("/api/products"),
+      categoriesApi.list(),
+      productsApi.list(),
     ])
       .then(([categoryData, productData]) => {
         setCategories(categoryData);
@@ -33,34 +38,31 @@ export default function HomePage() {
   );
 
   return (
-    <div className="space-y-12">
-      <section className="card relative isolate min-h-[520px] overflow-hidden text-white">
+    <div className="space-y-12 sm:space-y-16">
+      <section className="card relative isolate min-h-[400px] sm:min-h-[460px] overflow-hidden text-white">
         <Image src={heroImage} alt="Modern clothing store interior" fill priority sizes="(max-width: 1200px) 100vw, 1180px" className="object-cover" />
         <div className="absolute inset-0 -z-0 bg-gradient-to-r from-slate-950/95 via-slate-900/75 to-slate-900/20" />
-        <div className="relative z-10 flex min-h-[520px] max-w-3xl flex-col justify-center px-6 py-14 sm:px-12">
-          <p className="text-sm font-bold uppercase tracking-[.24em] text-indigo-200">ShopStack marketplace</p>
-          <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight text-white sm:text-6xl">Everything you need, all in one place.</h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg">Browse live inventory, discover categories, and place secure orders with prices verified by the backend.</p>
+        <div className="relative z-10 flex min-h-[400px] sm:min-h-[460px] max-w-3xl flex-col justify-center px-6 py-14 sm:px-12">
+          <p className="text-sm font-bold uppercase tracking-[.24em] text-indigo-200">A little more everyday</p>
+          <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-[1.12] tracking-[-0.04em] text-white sm:text-5xl lg:text-6xl">Your everyday, with a little more possibility.</h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg">From the things you need to the finds you didn’t know you loved. Discover something that fits your day.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link className="rounded-lg bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg hover:bg-indigo-500" href="/products">Shop all products</Link>
-            <Link className="rounded-lg border border-white/50 bg-white/10 px-5 py-3 text-sm font-bold text-white backdrop-blur hover:bg-white/20" href="/categories">Explore categories</Link>
+            <ButtonLink href="/products">Shop all products<Icon name="arrow" className="size-4" /></ButtonLink>
+            <ButtonLink variant="secondary" className="border-white/40 bg-white/10 text-white backdrop-blur hover:border-white/60 hover:bg-white/20" href="/categories">Explore categories</ButtonLink>
           </div>
           <a className="mt-8 w-fit text-xs text-slate-300 hover:text-white" href="https://unsplash.com" target="_blank" rel="noreferrer">Photo from Unsplash</a>
         </div>
       </section>
 
       {loading ? (
-        <div className="state-card">Loading the store...</div>
+        <StateCard loading>Loading the store...</StateCard>
       ) : error ? (
-        <div className="alert-error">{error}</div>
+        <Alert>{error}</Alert>
       ) : (
         <>
           <section>
-            <div className="mb-5 flex items-end justify-between gap-4">
-              <div><h2 className="text-2xl font-black text-slate-900">Shop by category</h2><p className="mt-1 text-slate-500">Choose a category to see its products.</p></div>
-              <Link className="text-sm font-bold text-indigo-700 hover:text-indigo-900" href="/categories">View all</Link>
-            </div>
-            {categories.length === 0 ? <div className="state-card">No categories are available.</div> : (
+            <SectionHeading title="A category for every curiosity" description="Start with what you love. See where it takes you." action={<ButtonLink href="/categories" variant="ghost">All categories<Icon name="arrow" className="size-4" /></ButtonLink>} />
+            {categories.length === 0 ? <StateCard>No categories are available.</StateCard> : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {categories.slice(0, 8).map((category) => {
                   const count = products.filter((product) => product.categoryId === category.id).length;
@@ -74,20 +76,10 @@ export default function HomePage() {
           </section>
 
           <section>
-            <div className="mb-5 flex items-end justify-between gap-4">
-              <div><h2 className="text-2xl font-black text-slate-900">Featured products</h2><p className="mt-1 text-slate-500">Available products from the live catalog.</p></div>
-              <Link className="text-sm font-bold text-indigo-700 hover:text-indigo-900" href="/products">View all</Link>
-            </div>
-            {featuredProducts.length === 0 ? <div className="state-card">No active products are available.</div> : (
+            <SectionHeading title="Explore the collection" description="A few finds to get you started." action={<ButtonLink href="/products" variant="ghost">All products<Icon name="arrow" className="size-4" /></ButtonLink>} />
+            {featuredProducts.length === 0 ? <StateCard>No active products are available.</StateCard> : (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {featuredProducts.map((product) => <article key={product.id} className="card flex flex-col overflow-hidden">
-                  <div className="relative h-52 bg-slate-100"><Image src={getStoreImage(`${product.name} ${product.category?.name ?? ""}`)} alt={product.name} fill sizes="(max-width: 640px) 100vw, 33vw" className="object-cover" /></div>
-                  <div className="flex flex-1 flex-col p-5"><span className="badge w-fit">{product.category?.name ?? "Product"}</span>
-                    <div className="mt-4 flex items-start justify-between gap-3"><h3 className="text-xl font-bold text-slate-900">{product.name}</h3><strong className="text-lg text-indigo-700">${product.price.toFixed(2)}</strong></div>
-                    <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{product.description || "No description provided."}</p>
-                    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5"><span className="text-sm font-semibold text-emerald-700">{product.stock} in stock</span><div className="flex gap-2"><Link className="button-secondary" href={`/products/${product.id}`}>Details</Link><BuyProductButton product={product} /></div></div>
-                  </div>
-                </article>)}
+                {featuredProducts.map((product) => <ProductCard key={product.id} product={product} featured />)}
               </div>
             )}
           </section>

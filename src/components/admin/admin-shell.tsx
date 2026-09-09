@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ProtectedPage } from "@/components/protected-page";
+import { ProtectedPage } from "@/components/auth/protected-page";
 
 const links = [
   { href: "/admin", label: "Overview", icon: "01" },

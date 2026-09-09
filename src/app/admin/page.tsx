@@ -1,9 +1,10 @@
 "use client";
+import { LOW_STOCK_THRESHOLD } from "@/lib/utils/stock";
+import { Alert } from "@/components/ui/alert";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { apiRequest, getErrorMessage } from "@/lib/api";
-import type { Category, Product, User } from "@/lib/types";
+import { productsApi, categoriesApi, usersApi, getErrorMessage } from "@/lib/api";
 
 type Counts = { users: number; products: number; categories: number; lowStock: number };
 
@@ -13,15 +14,15 @@ export default function AdminPage() {
 
   useEffect(() => {
     Promise.all([
-      apiRequest<User[]>("/api/users", { auth: true }),
-      apiRequest<Product[]>("/api/products"),
-      apiRequest<Category[]>("/api/categories"),
+      usersApi.list(),
+      productsApi.list(),
+      categoriesApi.list(),
     ])
       .then(([users, products, categories]) => setCounts({
         users: users.length,
         products: products.length,
         categories: categories.length,
-        lowStock: products.filter((product) => product.stock <= 5).length,
+        lowStock: products.filter((product) => product.stock <= LOW_STOCK_THRESHOLD).length,
       }))
       .catch((caught) => setError(getErrorMessage(caught)));
   }, []);
@@ -35,7 +36,7 @@ export default function AdminPage() {
 
   return <>
     <div className="page-heading"><p className="text-sm font-bold uppercase tracking-wider text-indigo-600">Admin overview</p><h1>Welcome to your dashboard</h1><p>Monitor the live store and manage its resources.</p></div>
-    {error && <div className="alert-error mb-5">{error}</div>}
+    {error && <Alert className="mb-5">{error}</Alert>}
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => <Link key={card.label} href={card.href} className="card p-5 hover:-translate-y-1 hover:border-indigo-300"><span className={`inline-flex rounded-lg px-3 py-1 text-xs font-bold ${card.tone}`}>{card.label}</span><div className="mt-5 text-4xl font-black text-slate-900">{card.value ?? "..."}</div><p className="mt-2 text-sm font-semibold text-slate-500">Open manager -&gt;</p></Link>)}
     </div>

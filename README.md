@@ -40,5 +40,15 @@ Authentication is persisted in local storage. Protected API requests automatical
 
 ```bash
 npm run lint
+npm run typecheck
+npm test
 npm run build
 ```
+
+## Frontend foundation
+
+See [the Step 1 audit](docs/frontend-audit.md) for the component structure, API contracts, complete backend coverage, validation limits, unused capabilities and recommended Step 2 scope.
+
+Use the typed resource methods from `@/lib/api` for new requests (`productsApi`, `categoriesApi`, `ordersApi`, `reviewsApi`, `authApi`, `usersApi`). Shared JSON contracts live in `src/types`; formatting and stock helpers live in `src/lib/utils`. Currency defaults to USD; dates default to UTC and accept timezone overrides. No cart is implemented in this step.
+
+See [the shared storefront UI notes](docs/storefront-shell.md) for the design primitives, responsive navigation, catalog search, cart placeholder and visual verification scope.

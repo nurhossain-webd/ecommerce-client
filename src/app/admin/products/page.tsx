@@ -1,13 +1,15 @@
 "use client";
+import { formatCurrency } from "@/lib/utils/currency";
+import { Alert } from "@/components/ui/alert";
+import { StateCard } from "@/components/ui/state-card";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { ProtectedPage } from "@/components/protected-page";
-import { apiRequest, getErrorMessage } from "@/lib/api";
+import { productsApi, categoriesApi, getErrorMessage } from "@/lib/api";
 import type { Category, Product, ProductStatus } from "@/lib/types";
 
 type ProductForm = { name: string; description: string; price: string; stock: string; categoryId: string; status: ProductStatus };
 const initialForm: ProductForm = { name: "", description: "", price: "", stock: "0", categoryId: "", status: "ACTIVE" };
 
-function ProductsManager() {
+export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [form, setForm] = useState<ProductForm>(initialForm);
@@ -16,34 +18,24 @@ function ProductsManager() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const load = useCallback(async () => {
-    try {
-      const [productData, categoryData] = await Promise.all([apiRequest<Product[]>("/api/products"), apiRequest<Category[]>("/api/categories")]);
+  const load = useCallback(() => Promise.all([productsApi.list(), categoriesApi.list()])
+    .then(([productData, categoryData]) => {
       setProducts(productData); setCategories(categoryData);
       setForm((current) => ({ ...current, categoryId: current.categoryId || categoryData[0]?.id || "" }));
-    } catch (caught) { setError(getErrorMessage(caught)); }
-    finally { setLoading(false); }
-  }, []);
-  useEffect(() => {
-    Promise.all([apiRequest<Product[]>("/api/products"), apiRequest<Category[]>("/api/categories")])
-      .then(([productData, categoryData]) => {
-        setProducts(productData);
-        setCategories(categoryData);
-        setForm((current) => ({ ...current, categoryId: current.categoryId || categoryData[0]?.id || "" }));
-      })
-      .catch((caught) => setError(getErrorMessage(caught)))
-      .finally(() => setLoading(false));
-  }, []);
+    })
+    .catch((caught) => setError(getErrorMessage(caught)))
+    .finally(() => setLoading(false)), []);
+  useEffect(() => { load(); }, [load]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError(""); setMessage("");
     const body = { name: form.name, description: form.description || undefined, price: Number(form.price), stock: Number(form.stock), categoryId: form.categoryId, status: form.status };
     try {
       if (editingId) {
-        await apiRequest(`/api/products/${editingId}`, { method: "PATCH", auth: true, body });
+        await productsApi.update(editingId, body);
         setMessage("Product updated.");
       } else {
-        await apiRequest("/api/products", { method: "POST", auth: true, body });
+        await productsApi.create(body);
         setMessage("Product created.");
       }
       setEditingId(null); setForm({ ...initialForm, categoryId: categories[0]?.id || "" }); await load();
@@ -57,7 +49,7 @@ function ProductsManager() {
   };
   const remove = async (product: Product) => {
     if (!window.confirm(`Delete ${product.name}?`)) return;
-    try { await apiRequest(`/api/products/${product.id}`, { method: "DELETE", auth: true }); setProducts((current) => current.filter((item) => item.id !== product.id)); setMessage("Product deleted."); }
+    try { await productsApi.remove(product.id); setProducts((current) => current.filter((item) => item.id !== product.id)); setMessage("Product deleted."); }
     catch (caught) { setError(getErrorMessage(caught)); }
   };
   const setField = (field: keyof ProductForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
@@ -72,8 +64,7 @@ function ProductsManager() {
       <div className="field"><label>Description</label><input className="input" value={form.description} onChange={(event) => setField("description", event.target.value)} /></div>
       <div className="flex gap-2 md:col-span-2"><button className="button-primary">{editingId ? "Save changes" : "Create product"}</button>{editingId && <button type="button" className="button-secondary" onClick={() => { setEditingId(null); setForm({ ...initialForm, categoryId: categories[0]?.id || "" }); }}>Cancel</button>}</div>
     </form>
-    {error && <div className="alert-error mb-4">{error}</div>}{message && <div className="alert-success mb-4">{message}</div>}
-    {loading ? <div className="state-card">Loading products...</div> : products.length === 0 ? <div className="state-card">No products found.</div> : <div className="card table-wrap"><table className="data-table"><thead><tr><th>Product</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead><tbody>{products.map((product) => <tr key={product.id}><td><strong>{product.name}</strong><div className="text-sm text-slate-500">{product.category?.name}</div></td><td>${product.price.toFixed(2)}</td><td>{product.stock}</td><td><span className="badge">{product.status}</span></td><td><div className="flex gap-2"><button className="button-secondary" onClick={() => startEdit(product)}>Edit</button><button className="button-danger" onClick={() => remove(product)}>Delete</button></div></td></tr>)}</tbody></table></div>}
+    {error && <Alert className="mb-4">{error}</Alert>}{message && <Alert variant="success" className="mb-4">{message}</Alert>}
+    {loading ? <StateCard loading>Loading products...</StateCard> : products.length === 0 ? <StateCard>No products found.</StateCard> : <div className="card table-wrap"><table className="data-table"><thead><tr><th>Product</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead><tbody>{products.map((product) => <tr key={product.id}><td><strong>{product.name}</strong><div className="text-sm text-slate-500">{product.category?.name}</div></td><td>{formatCurrency(product.price)}</td><td>{product.stock}</td><td><span className="badge">{product.status}</span></td><td><div className="flex gap-2"><button className="button-secondary" onClick={() => startEdit(product)}>Edit</button><button className="button-danger" onClick={() => remove(product)}>Delete</button></div></td></tr>)}</tbody></table></div>}
   </>;
 }
-export default function AdminProductsPage() { return <ProtectedPage role="ADMIN"><ProductsManager /></ProtectedPage>; }

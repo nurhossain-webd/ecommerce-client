@@ -1,12 +1,18 @@
 "use client";
+import { ProductStock } from "@/components/products/product-stock";
+import { formatCurrency } from "@/lib/utils/currency";
+import { formatDate } from "@/lib/utils/dates";
+import { isProductPurchasable } from "@/lib/utils/stock";
+import { Alert } from "@/components/ui/alert";
+import { StateCard } from "@/components/ui/state-card";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { BuyProductButton } from "@/components/buy-product-button";
+import { BuyProductButton } from "@/components/products/buy-product-button";
 import { useAuth } from "@/context/auth-context";
-import { apiRequest, getErrorMessage } from "@/lib/api";
+import { productsApi, reviewsApi, getErrorMessage } from "@/lib/api";
 import { getStoreImage } from "@/lib/store-images";
 import type { Product, Review } from "@/lib/types";
 
@@ -25,7 +31,7 @@ export default function ProductDetailsPage() {
 
   useEffect(() => {
     if (!id) return;
-    Promise.all([apiRequest<Product>(`/api/products/${id}`), apiRequest<Review[]>("/api/reviews")])
+    Promise.all([productsApi.get(id), reviewsApi.list()])
       .then(([productData, reviewData]) => {
         setProduct(productData);
         setReviews(reviewData.filter((review) => review.productId === id));
@@ -41,12 +47,8 @@ export default function ProductDetailsPage() {
     setReviewError("");
     setReviewMessage("");
     try {
-      await apiRequest("/api/reviews", {
-        method: "POST",
-        auth: true,
-        body: { productId: product.id, rating, comment: comment.trim() || undefined },
-      });
-      const reviewData = await apiRequest<Review[]>("/api/reviews");
+      await reviewsApi.create({ productId: product.id, rating, comment: comment.trim() || undefined });
+      const reviewData = await reviewsApi.list();
       setReviews(reviewData.filter((review) => review.productId === product.id));
       setRating(5);
       setComment("");
@@ -58,11 +60,11 @@ export default function ProductDetailsPage() {
     }
   };
 
-  if (loading) return <div className="state-card">Loading product details...</div>;
-  if (error) return <><div className="alert-error">{error}</div><Link className="button-secondary mt-4" href="/products">Back to products</Link></>;
-  if (!product) return <div className="state-card">Product not found.</div>;
+  if (loading) return <StateCard loading>Loading product details...</StateCard>;
+  if (error) return <><Alert>{error}</Alert><Link className="button-secondary mt-4" href="/products">Back to products</Link></>;
+  if (!product) return <StateCard>Product not found.</StateCard>;
 
-  const available = product.status === "ACTIVE" && product.stock > 0;
+  const available = isProductPurchasable(product);
   const averageRating = reviews.length ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length : 0;
   return <>
     <Link className="mb-5 inline-block text-sm font-bold text-indigo-700 hover:text-indigo-900" href="/products">&lt;- Back to products</Link>
@@ -73,7 +75,7 @@ export default function ProductDetailsPage() {
         <h1 className="mt-5 text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">{product.name}</h1>
         <p className="mt-5 text-base leading-7 text-slate-600">{product.description || "No description is available for this product."}</p>
         <div className="my-7 border-y border-slate-200 py-5">
-          <div className="flex items-end justify-between gap-4"><div><p className="text-sm font-semibold text-slate-500">Price</p><p className="mt-1 text-3xl font-black text-indigo-700">${product.price.toFixed(2)}</p></div><div className="text-right"><p className={available ? "font-bold text-emerald-700" : "font-bold text-amber-700"}>{product.status}</p><p className="mt-1 text-sm text-slate-500">{product.stock} units in stock</p></div></div>
+          <div className="flex items-end justify-between gap-4"><div><p className="text-sm font-semibold text-slate-500">Price</p><p className="mt-1 text-3xl font-black text-indigo-700">{formatCurrency(product.price)}</p></div><div className="text-right"><p className={available ? "font-bold text-emerald-700" : "font-bold text-amber-700"}>{product.status}</p><p className="mt-1"><ProductStock product={product} /></p></div></div>
         </div>
         <div className="flex flex-wrap gap-3"><BuyProductButton product={product} /><Link className="button-secondary" href="/products">Continue shopping</Link></div>
         <p className="mt-5 text-xs leading-5 text-slate-500">Price and availability are verified by the server when you confirm your order.</p>
@@ -88,11 +90,11 @@ export default function ProductDetailsPage() {
           <div className="field"><label htmlFor="review-rating">Rating</label><select id="review-rating" className="input" value={rating} onChange={(event) => setRating(Number(event.target.value))}>{[5, 4, 3, 2, 1].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select></div>
           <div className="field"><label htmlFor="review-comment">Comment</label><textarea id="review-comment" className="input min-h-24 resize-y" maxLength={1000} placeholder="What did you like or dislike?" value={comment} onChange={(event) => setComment(event.target.value)} /></div>
         </div>
-        {reviewError && <div className="alert-error mt-4">{reviewError}</div>}
-        {reviewMessage && <div className="alert-success mt-4">{reviewMessage}</div>}
+        {reviewError && <Alert className="mt-4">{reviewError}</Alert>}
+        {reviewMessage && <Alert variant="success" className="mt-4">{reviewMessage}</Alert>}
         <button className="button-primary mt-4" disabled={reviewSubmitting}>{reviewSubmitting ? "Publishing..." : "Publish review"}</button>
       </form> : !user ? <div className="card mb-5 flex flex-wrap items-center justify-between gap-3 p-5"><div><h3 className="font-bold text-slate-900">Purchased this product?</h3><p className="text-sm text-slate-500">Log in to share your review.</p></div><Link className="button-primary" href="/login">Login to review</Link></div> : null}
-      {reviews.length === 0 ? <div className="state-card">This product has no reviews yet.</div> : <div className="grid gap-4 md:grid-cols-2">{reviews.map((review) => <article key={review.id} className="card p-5"><div className="flex items-center justify-between gap-3"><strong className="text-slate-900">{review.user?.name ?? "Customer"}</strong><span className="font-black text-amber-500">{"*".repeat(review.rating)}<span className="text-slate-300">{"*".repeat(5 - review.rating)}</span></span></div><p className="mt-3 leading-6 text-slate-600">{review.comment || "No written comment."}</p><p className="mt-3 text-xs text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</p></article>)}</div>}
+      {reviews.length === 0 ? <StateCard>This product has no reviews yet.</StateCard> : <div className="grid gap-4 md:grid-cols-2">{reviews.map((review) => <article key={review.id} className="card p-5"><div className="flex items-center justify-between gap-3"><strong className="text-slate-900">{review.user?.name ?? "Customer"}</strong><span className="font-black text-amber-500">{"*".repeat(review.rating)}<span className="text-slate-300">{"*".repeat(5 - review.rating)}</span></span></div><p className="mt-3 leading-6 text-slate-600">{review.comment || "No written comment."}</p><p className="mt-3 text-xs text-slate-400">{formatDate(review.createdAt)}</p></article>)}</div>}
     </section>
   </>;
 }

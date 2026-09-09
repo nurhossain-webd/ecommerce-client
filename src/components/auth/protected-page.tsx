@@ -1,4 +1,5 @@
 "use client";
+import { StateCard } from "@/components/ui/state-card";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,6 @@ export function ProtectedPage({ children, role }: { children: React.ReactNode; r
     if (!loading && !user) router.replace("/login");
     else if (!loading && role && user?.role !== role) router.replace("/products");
   }, [loading, role, router, user]);
-  if (loading || !user || (role && user.role !== role)) return <div className="state-card">Checking access…</div>;
+  if (loading || !user || (role && user.role !== role)) return <StateCard loading>Checking access…</StateCard>;
   return children;
 }

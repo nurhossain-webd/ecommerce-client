@@ -2,21 +2,21 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiRequest } from "@/lib/api";
-import type { User } from "@/lib/types";
+import { authApi, AUTH_TOKEN_KEY, AUTH_USER_KEY, AUTH_UNAUTHORIZED_EVENT } from "@/lib/api";
+import type { AuthUser } from "@/lib/types";
 
-type AuthContextValue = { user: User | null; token: string | null; loading: boolean; login: (email: string, password: string) => Promise<User>; register: (name: string, email: string, password: string) => Promise<User>; logout: () => void };
+type AuthContextValue = { user: AuthUser | null; token: string | null; loading: boolean; login: (email: string, password: string) => Promise<AuthUser>; register: (name: string, email: string, password: string) => Promise<AuthUser>; logout: () => void };
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_user");
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_USER_KEY);
     setToken(null);
     setUser(null);
     router.push("/login");
@@ -24,15 +24,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const storedToken = localStorage.getItem("auth_token");
-      const storedUser = localStorage.getItem("auth_user");
+      const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      const storedUser = localStorage.getItem(AUTH_USER_KEY);
       if (storedToken && storedUser) {
         try {
           setToken(storedToken);
-          setUser(JSON.parse(storedUser) as User);
+          setUser(JSON.parse(storedUser) as AuthUser);
         } catch {
-          localStorage.removeItem("auth_token");
-          localStorage.removeItem("auth_user");
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem(AUTH_USER_KEY);
         }
       }
       setLoading(false);
@@ -41,23 +41,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    window.addEventListener("auth:unauthorized", logout);
-    return () => window.removeEventListener("auth:unauthorized", logout);
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, logout);
+    return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, logout);
   }, [logout]);
 
   const login = async (email: string, password: string) => {
-    const data = await apiRequest<{ user: User; token: string }>("/api/auth/login", { method: "POST", body: { email, password } });
-    localStorage.setItem("auth_token", data.token);
-    localStorage.setItem("auth_user", JSON.stringify(data.user));
+    const data = await authApi.login({ email, password });
+    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
     return data.user;
   };
 
   const register = async (name: string, email: string, password: string) => {
-    const data = await apiRequest<{ user: User; token: string }>("/api/auth/register", { method: "POST", body: { name, email, password } });
-    localStorage.setItem("auth_token", data.token);
-    localStorage.setItem("auth_user", JSON.stringify(data.user));
+    const data = await authApi.register({ name, email, password });
+    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
     return data.user;
