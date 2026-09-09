@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useRouter } from "next/navigation";
 import { authApi, AUTH_TOKEN_KEY, AUTH_USER_KEY, AUTH_UNAUTHORIZED_EVENT } from "@/lib/api";
 import type { AuthUser } from "@/lib/types";
+import { currentDestination, loginHref } from "@/lib/auth-redirect";
 
 type AuthContextValue = { user: AuthUser | null; token: string | null; loading: boolean; login: (email: string, password: string) => Promise<AuthUser>; register: (name: string, email: string, password: string) => Promise<AuthUser>; logout: () => void };
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -20,6 +21,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setUser(null);
     router.push("/login");
+  }, [router]);
+
+  const handleUnauthorized = useCallback(() => {
+    const destination = currentDestination();
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_USER_KEY);
+    setToken(null);
+    setUser(null);
+    router.replace(loginHref(destination));
   }, [router]);
 
   useEffect(() => {
@@ -41,9 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, logout);
-    return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, logout);
-  }, [logout]);
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+    return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+  }, [handleUnauthorized]);
 
   const login = async (email: string, password: string) => {
     const data = await authApi.login({ email, password });
