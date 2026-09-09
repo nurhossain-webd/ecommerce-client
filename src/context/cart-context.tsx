@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/types";
 import { isProductPurchasable } from "@/lib/utils/stock";
+import { useToast } from "@/context/toast-context";
 
 const CART_STORAGE_KEY = "shopstack_cart";
 
@@ -34,6 +35,7 @@ function isStoredItem(value: unknown): value is CartItem {
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
   const [items, setItems] = useState<CartItem[]>([]);
   const [ready, setReady] = useState(false);
 
@@ -84,7 +86,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         ? { product, quantity: Math.min(product.stock, item.quantity + amount) }
         : item);
     });
-  }, []);
+    toast(`${product.name} added to your cart.`);
+  }, [toast]);
 
   const removeProduct = useCallback((productId: string) => setItems((current) => current.filter((item) => item.product.id !== productId)), []);
   const increaseQuantity = useCallback((productId: string) => setItems((current) => current.map((item) => item.product.id === productId ? { ...item, quantity: Math.min(item.product.stock, item.quantity + 1) } : item)), []);

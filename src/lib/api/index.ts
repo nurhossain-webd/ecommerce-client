@@ -1,7 +1,7 @@
 export { apiRequest, AUTH_TOKEN_KEY, AUTH_USER_KEY, AUTH_UNAUTHORIZED_EVENT } from "./client";
 export type { ApiOptions } from "./client";
 export type { RequestOptions } from "./options";
-export { ApiError, getErrorMessage, getFieldErrors, isAbortError } from "./errors";
+export { ApiError, getDetailedErrorMessage, getErrorMessage, getFieldErrors, isAbortError } from "./errors";
 export { authApi } from "./auth";
 export { productsApi } from "./products";
 export { categoriesApi } from "./categories";

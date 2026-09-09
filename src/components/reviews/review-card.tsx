@@ -2,11 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import type { Review } from "@/lib/types";
-import { reviewsApi, getErrorMessage } from "@/lib/api";
+import { reviewsApi, getDetailedErrorMessage as getErrorMessage } from "@/lib/api";
 import { formatDate } from "@/lib/utils/dates";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { RatingStars } from "./rating-stars";
+import { ConfirmDialog } from "@/components/ui/dialog";
 
 export function ReviewCard({ review, canManage, onChanged }: { review: Review; canManage: boolean; onChanged: () => Promise<void> }) {
   const [editing, setEditing] = useState(false);
@@ -14,6 +15,7 @@ export function ReviewCard({ review, canManage, onChanged }: { review: Review; c
   const [comment, setComment] = useState(review.comment ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const update = async (event: FormEvent) => {
     event.preventDefault();
@@ -27,9 +29,8 @@ export function ReviewCard({ review, canManage, onChanged }: { review: Review; c
   };
 
   const remove = async () => {
-    if (!window.confirm("Delete this review?")) return;
     setBusy(true); setError("");
-    try { await reviewsApi.remove(review.id); await onChanged(); }
+    try { await reviewsApi.remove(review.id); setConfirmingDelete(false); await onChanged(); }
     catch (caught) { setError(getErrorMessage(caught)); setBusy(false); }
   };
 
@@ -45,7 +46,8 @@ export function ReviewCard({ review, canManage, onChanged }: { review: Review; c
       <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold text-ink">{review.user.name}</p><p className="mt-1 text-xs text-muted">{formatDate(review.createdAt)}</p></div><RatingStars rating={review.rating} /></div>
       <p className="mt-4 text-sm leading-7 text-muted">{review.comment || "No written comment."}</p>
       {error && <Alert className="mt-4">{error}</Alert>}
-      {canManage && <div className="mt-5 flex gap-2 border-t border-line pt-4"><Button variant="ghost" size="sm" disabled={busy} onClick={() => setEditing(true)}>Edit</Button><Button variant="danger" size="sm" disabled={busy} onClick={remove}>{busy ? "Deleting..." : "Delete"}</Button></div>}
+      {canManage && <div className="mt-5 flex gap-2 border-t border-line pt-4"><Button variant="ghost" size="sm" disabled={busy} onClick={() => setEditing(true)}>Edit</Button><Button variant="danger" size="sm" disabled={busy} onClick={() => setConfirmingDelete(true)}>Delete</Button></div>}
     </>}
+    <ConfirmDialog open={confirmingDelete} title="Delete review?" busy={busy} onCancel={() => setConfirmingDelete(false)} onConfirm={remove}>This review will be removed from the product.</ConfirmDialog>
   </article>;
 }

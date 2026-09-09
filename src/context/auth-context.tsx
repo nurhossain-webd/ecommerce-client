@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(AUTH_USER_KEY);
     setToken(null);
     setUser(null);
-    router.replace(loginHref(destination));
+    router.replace(`${loginHref(destination)}&reason=expired`);
   }, [router]);
 
   useEffect(() => {

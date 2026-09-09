@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/auth-context";
-import { getErrorMessage } from "@/lib/api";
+import { getDetailedErrorMessage as getErrorMessage } from "@/lib/api";
 import { loginHref, safeNextPath } from "@/lib/auth-redirect";
 
 function RegisterForm() {

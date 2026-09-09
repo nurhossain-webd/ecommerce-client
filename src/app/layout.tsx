@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/auth-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CartProvider } from "@/context/cart-context";
+import { ToastProvider } from "@/context/toast-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full"><a href="#main-content" className="skip-link">Skip to content</a><AuthProvider><CartProvider><div className="flex min-h-screen flex-col"><Header /><main id="main-content" tabIndex={-1} className="page-shell min-w-0 flex-1 py-8 outline-none sm:py-10 lg:py-12">{children}</main><Footer /></div></CartProvider></AuthProvider></body>
+      <body className="min-h-full"><a href="#main-content" className="skip-link">Skip to content</a><AuthProvider><ToastProvider><CartProvider><div className="flex min-h-screen flex-col"><Header /><main id="main-content" tabIndex={-1} className="page-shell min-w-0 flex-1 py-8 outline-none sm:py-10 lg:py-12">{children}</main><Footer /></div></CartProvider></ToastProvider></AuthProvider></body>
     </html>
   );
 }

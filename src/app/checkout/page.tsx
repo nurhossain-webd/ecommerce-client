@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { useCart } from "@/context/cart-context";
 import { useAuth } from "@/context/auth-context";
-import { ordersApi, getErrorMessage } from "@/lib/api";
+import { ordersApi, getDetailedErrorMessage as getErrorMessage } from "@/lib/api";
 import { getStoreImage } from "@/lib/store-images";
 import { formatCurrency } from "@/lib/utils/currency";
 import { ProtectedPage } from "@/components/auth/protected-page";

@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
-import { productsApi, reviewsApi, ordersApi, getErrorMessage } from "@/lib/api";
+import { productsApi, reviewsApi, ordersApi, getDetailedErrorMessage as getErrorMessage } from "@/lib/api";
 import { getStoreImage } from "@/lib/store-images";
 import { formatCurrency } from "@/lib/utils/currency";
 import { isProductPurchasable } from "@/lib/utils/stock";

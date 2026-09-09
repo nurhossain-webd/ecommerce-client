@@ -8,7 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
-import { ordersApi, getErrorMessage } from "@/lib/api";
+import { ordersApi, getDetailedErrorMessage as getErrorMessage } from "@/lib/api";
 import type { Product } from "@/lib/types";
 
 type Props = {

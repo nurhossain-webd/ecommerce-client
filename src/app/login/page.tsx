@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/auth-context";
-import { getErrorMessage } from "@/lib/api";
+import { getDetailedErrorMessage as getErrorMessage } from "@/lib/api";
 import { registerHref, safeNextPath } from "@/lib/auth-redirect";
 
 function LoginForm() {
@@ -22,6 +22,7 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const requestedDestination = safeNextPath(searchParams.get("next"), "");
+  const sessionExpired = searchParams.get("reason") === "expired";
 
   useEffect(() => {
     if (!authLoading && user) router.replace(requestedDestination || (user.role === "ADMIN" ? "/admin" : "/products"));
@@ -55,6 +56,7 @@ function LoginForm() {
   return <div className="mx-auto max-w-md py-10"><Card className="p-6 sm:p-8">
     <div className="page-heading"><p className="eyebrow mb-3">ShopStack account</p><h1>Welcome back</h1><p>Sign in to continue shopping and view your orders.</p></div>
     <form onSubmit={submit} className="grid gap-4" aria-busy={loading} noValidate>
+      {sessionExpired && !error && <Alert>Your session expired. Sign in again to continue.</Alert>}
       {error && <Alert>{error}</Alert>}
       <div className="field"><label htmlFor="email">Email</label><Input id="email" type="email" inputMode="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required disabled={loading} aria-invalid={Boolean(error)} /></div>
       <div className="field"><label htmlFor="password">Password</label><PasswordField id="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required disabled={loading} aria-invalid={Boolean(error)} /></div>
