@@ -1,14 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { Product } from "@/lib/types";
 import { getStoreImage } from "@/lib/store-images";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { BuyProductButton } from "./buy-product-button";
+import { Icon } from "@/components/ui/icon";
 import { ProductStock } from "./product-stock";
 
-export function ProductCard({ product, featured = false }: { product: Product; featured?: boolean }) {
+export function ProductCard({ product, featured = false, children }: { product: Product; featured?: boolean; children?: ReactNode }) {
   const Heading = featured ? "h3" : "h2";
   return <article className="product-card group">
     <Link href={`/products/${product.id}`} className="product-image block" aria-label={`View ${product.name}`}>
@@ -19,7 +20,11 @@ export function ProductCard({ product, featured = false }: { product: Product; f
       <Heading className="product-title mt-3"><Link href={`/products/${product.id}`} className="rounded hover:text-brand">{product.name}</Link></Heading>
       <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">{product.description || "Discover your next everyday favorite."}</p>
       <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5"><strong className="product-price">{formatCurrency(product.price)}</strong><ProductStock product={product} /></div>
-      <div className="mt-5 flex gap-2 border-t border-line pt-4"><ButtonLink variant="secondary" href={`/products/${product.id}`} className="flex-1">Details</ButtonLink><BuyProductButton product={product} /></div>
+      {children}
+      <div className="mt-5 flex gap-2 border-t border-line pt-4">
+        <ButtonLink variant="secondary" href={`/products/${product.id}`} className="flex-1">View details</ButtonLink>
+        <button type="button" disabled title="Cart coming soon" className="button-primary flex-1" aria-label={`Add ${product.name} to cart. Cart coming soon.`}><Icon name="cart" className="size-4" />Add to cart</button>
+      </div>
     </div>
   </article>;
 }
