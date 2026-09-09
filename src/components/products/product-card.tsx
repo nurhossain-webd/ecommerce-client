@@ -8,9 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { ProductStock } from "./product-stock";
+import { useCart } from "@/context/cart-context";
+import { isProductPurchasable } from "@/lib/utils/stock";
 
 export function ProductCard({ product, featured = false, children }: { product: Product; featured?: boolean; children?: ReactNode }) {
+  const { addProduct } = useCart();
   const Heading = featured ? "h3" : "h2";
+  const available = isProductPurchasable(product);
   return <article className="product-card group">
     <Link href={`/products/${product.id}`} className="product-image block" aria-label={`View ${product.name}`}>
       <Image src={getStoreImage(`${product.name} ${product.category.name}`)} alt={product.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition duration-300 group-hover:scale-[1.03] motion-reduce:transform-none" />
@@ -23,7 +27,7 @@ export function ProductCard({ product, featured = false, children }: { product: 
       {children}
       <div className="mt-5 flex gap-2 border-t border-line pt-4">
         <ButtonLink variant="secondary" href={`/products/${product.id}`} className="flex-1">View details</ButtonLink>
-        <button type="button" disabled title="Cart coming soon" className="button-primary flex-1" aria-label={`Add ${product.name} to cart. Cart coming soon.`}><Icon name="cart" className="size-4" />Add to cart</button>
+        <button type="button" disabled={!available} className="button-primary flex-1" onClick={() => addProduct(product)}><Icon name="cart" className="size-4" />{available ? "Add to cart" : "Unavailable"}</button>
       </div>
     </div>
   </article>;

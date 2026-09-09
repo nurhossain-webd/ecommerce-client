@@ -1,5 +1,5 @@
 # Cart presentation
 
-`CartButton` is a disabled shopping-cart icon with a zero badge and an accessible coming-soon label. It is part of the shared storefront shell only.
+Cart state lives in `CartContext`, persists under `shopstack_cart`, and stores product snapshots with bounded quantities. The navbar button links to `/cart` and shows total item quantity.
 
-No cart state, persistence, add/remove behavior, checkout or cart route is implemented. Existing direct-order and Buy now flows remain in the products feature.
+Checkout submits only product IDs and quantities. Displayed prices are estimates; the backend remains authoritative for current prices and stock.
