@@ -6,7 +6,7 @@ import { authApi, AUTH_TOKEN_KEY, AUTH_USER_KEY, AUTH_UNAUTHORIZED_EVENT } from 
 import type { AuthUser } from "@/lib/types";
 import { currentDestination, loginHref } from "@/lib/auth-redirect";
 
-type AuthContextValue = { user: AuthUser | null; token: string | null; loading: boolean; login: (email: string, password: string) => Promise<AuthUser>; register: (name: string, email: string, password: string) => Promise<AuthUser>; logout: () => void };
+type AuthContextValue = { user: AuthUser | null; token: string | null; loading: boolean; login: (email: string, password: string) => Promise<AuthUser>; loginWithGoogle: (credential: string) => Promise<AuthUser>; register: (name: string, email: string, password: string) => Promise<AuthUser>; logout: () => void };
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -73,7 +73,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return data.user;
   };
 
-  const value = useMemo(() => ({ user, token, loading, login, register, logout }), [user, token, loading, logout]);
+  const loginWithGoogle = async (credential: string) => {
+    const data = await authApi.google({ credential });
+    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
+    setToken(data.token);
+    setUser(data.user);
+    return data.user;
+  };
+
+  const value = useMemo(() => ({ user, token, loading, login, loginWithGoogle, register, logout }), [user, token, loading, logout]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

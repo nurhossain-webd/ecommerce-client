@@ -29,8 +29,8 @@ function StoreHeader({ pathname }: { pathname: string }) {
     { href: "/", label: "Home", icon: "home" },
     { href: "/products", label: "Products", icon: "bag" },
     { href: "/categories", label: "Categories", icon: "grid" },
-    ...(!loading && user ? [{ href: "/orders", label: "Orders", icon: "orders" as const }] : []),
-    ...(!loading && user?.role === "ADMIN" ? [{ href: "/admin", label: "Admin", icon: "admin" as const }] : []),
+    ...(!loading && user?.role === "USER" ? [{ href: "/orders", label: "Orders", icon: "orders" as const }] : []),
+    ...(!loading && user?.role === "ADMIN" ? [{ href: "/admin", label: "Dashboard", icon: "admin" as const }] : []),
   ];
   const isActive = (href: string) => href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 
@@ -38,20 +38,15 @@ function StoreHeader({ pathname }: { pathname: string }) {
     <div className="bg-[#eeedf6] px-4 py-2 text-center text-[11px] font-medium tracking-wide text-[#5e587d]">A little discovery. A new everyday favorite.</div>
     <header className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur-xl">
       <div ref={containerRef}>
-        <div className="page-shell flex min-h-20 flex-wrap items-center justify-between gap-x-2 gap-y-3 sm:gap-x-4 py-4 lg:flex-nowrap lg:gap-x-10 lg:py-5">
+        <div className="page-shell flex min-h-20 flex-wrap items-center justify-between gap-x-2 gap-y-3 py-4 sm:gap-x-4 lg:flex-nowrap lg:gap-x-3 lg:py-4 xl:gap-x-5">
           <Brand onClick={() => setOpen(false)} />
-          <div className="order-3 w-full lg:order-none lg:max-w-[540px] lg:flex-1"><SearchField onSearch={() => setOpen(false)} /></div>
+          <nav aria-label="Main navigation" className="hidden shrink-0 items-center lg:flex">{links.map((link) => <Link key={link.href} href={link.href} aria-current={isActive(link.href) ? "page" : undefined} className={cn("nav-link px-2.5 xl:px-3", isActive(link.href) && "nav-link-active")}><Icon name={link.icon} className="hidden size-4 xl:block" />{link.label}</Link>)}</nav>
+          <div className="order-3 w-full lg:order-none lg:min-w-40 lg:max-w-[320px] lg:flex-1"><SearchField onSearch={() => setOpen(false)} /></div>
           <div className="flex shrink-0 items-center gap-1 sm:gap-3">
             <AccountMenu key={user?.id ?? "guest"} onOpen={() => setOpen(false)} />
             <span className="mx-1 hidden h-7 w-px bg-line sm:block" />
-            <CartButton />
+            {user?.role !== "ADMIN" && <CartButton />}
             <Button ref={triggerRef} variant="ghost" size="icon" className="size-10 min-h-10 sm:size-11 lg:hidden" aria-expanded={open} aria-controls={navigationId} aria-label={open ? "Close navigation" : "Open navigation"} onClick={() => setOpen(!open)}><Icon name={open ? "close" : "menu"} /></Button>
-          </div>
-        </div>
-        <div className="hidden border-t border-line/70 lg:block">
-          <div className="page-shell flex min-h-14 items-center justify-between gap-5">
-            <nav aria-label="Main navigation" className="flex items-center gap-1">{links.map((link) => <Link key={link.href} href={link.href} aria-current={isActive(link.href) ? "page" : undefined} className={cn("nav-link", isActive(link.href) && "nav-link-active")}><Icon name={link.icon} className="size-4" />{link.label}</Link>)}</nav>
-            <Link href="/products" className="inline-flex items-center gap-2 rounded text-xs font-medium text-muted hover:text-brand">Find something you love<Icon name="arrow" className="size-4" /></Link>
           </div>
         </div>
         {open && <div id={navigationId} className="absolute inset-x-0 top-full max-h-[calc(100dvh-11rem)] overflow-y-auto border-b border-line bg-white px-4 pb-5 pt-2 shadow-xl shadow-ink/5 lg:hidden">

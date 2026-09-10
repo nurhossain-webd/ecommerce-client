@@ -47,5 +47,5 @@ function OrdersContent() {
 }
 
 export default function OrdersPage() {
-  return <ProtectedPage><OrdersContent /></ProtectedPage>;
+  return <ProtectedPage role="USER"><OrdersContent /></ProtectedPage>;
 }

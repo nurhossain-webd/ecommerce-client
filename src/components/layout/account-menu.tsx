@@ -23,7 +23,7 @@ export function AccountMenu({ onOpen }: { onOpen?: () => void }) {
     </Button>
     {open && <div id={id} className="absolute right-0 top-full z-50 mt-3 w-64 max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-white p-2 shadow-[0_16px_48px_rgb(30_25_60/0.12)]">
       <div className="mb-2 border-b border-line px-3 pb-4 pt-3"><p className="text-sm font-semibold text-ink break-words">{user.name}</p><p className="mt-1 truncate text-xs text-muted">{user.email}</p></div>
-      <nav aria-label="Account"><Link href="/orders" className="menu-link" onClick={() => setOpen(false)}><Icon name="orders" />My orders</Link>{user.role === "ADMIN" && <Link href="/admin" className="menu-link" onClick={() => setOpen(false)}><Icon name="admin" />Admin dashboard</Link>}</nav>
+      <nav aria-label="Account">{user.role === "USER" && <Link href="/orders" className="menu-link" onClick={() => setOpen(false)}><Icon name="orders" />My orders</Link>}{user.role === "ADMIN" && <Link href="/admin" className="menu-link" onClick={() => setOpen(false)}><Icon name="admin" />Dashboard</Link>}</nav>
       <div className="mt-2 border-t border-line pt-2"><button type="button" className="menu-link text-red-700" onClick={() => { setOpen(false); logout(); }}><Icon name="logout" />Log out</button></div>
     </div>}
   </div>;

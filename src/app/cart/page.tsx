@@ -18,6 +18,7 @@ export default function CartPage() {
   const { items, ready, itemCount, estimatedSubtotal, removeProduct, increaseQuantity, decreaseQuantity, setQuantity, clearCart } = useCart();
 
   if (!ready) return <div className="space-y-5" role="status" aria-label="Loading cart"><Skeleton className="h-10 w-52" /><Skeleton className="h-48 w-full" /></div>;
+  if (user?.role === "ADMIN") return <EmptyState icon="shield" title="Customer cart unavailable" action={<ButtonLink href="/">Back to store</ButtonLink>}>Administrators can browse the storefront, products, and categories without customer purchasing tools.</EmptyState>;
 
   return <>
     <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 text-xs text-muted"><Link href="/" className="hover:text-brand">Home</Link><span>/</span><span aria-current="page" className="text-ink">Cart</span></nav>

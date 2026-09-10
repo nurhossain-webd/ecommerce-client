@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -10,9 +12,11 @@ import { Icon } from "@/components/ui/icon";
 import { ProductStock } from "./product-stock";
 import { useCart } from "@/context/cart-context";
 import { isProductPurchasable } from "@/lib/utils/stock";
+import { useAuth } from "@/context/auth-context";
 
 export function ProductCard({ product, featured = false, children }: { product: Product; featured?: boolean; children?: ReactNode }) {
   const { addProduct } = useCart();
+  const { user } = useAuth();
   const Heading = featured ? "h3" : "h2";
   const available = isProductPurchasable(product);
   return <article className="product-card group">
@@ -27,7 +31,7 @@ export function ProductCard({ product, featured = false, children }: { product: 
       {children}
       <div className="mt-5 flex gap-2 border-t border-line pt-4">
         <ButtonLink variant="secondary" href={`/products/${product.id}`} className="flex-1">View details</ButtonLink>
-        <button type="button" disabled={!available} className="button-primary flex-1" onClick={() => addProduct(product)}><Icon name="cart" className="size-4" />{available ? "Add to cart" : "Unavailable"}</button>
+        {user?.role !== "ADMIN" && <button type="button" disabled={!available} className="button-primary flex-1" onClick={() => addProduct(product)}><Icon name="cart" className="size-4" />{available ? "Add to cart" : "Unavailable"}</button>}
       </div>
     </div>
   </article>;

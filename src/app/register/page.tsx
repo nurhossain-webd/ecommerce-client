@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { Suspense, useCallback, useEffect, useState, type FormEvent } from "react";
 import { PasswordField } from "@/components/auth/password-field";
+import { GoogleSignIn } from "@/components/auth/google-sign-in";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import { loginHref, safeNextPath } from "@/lib/auth-redirect";
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading: authLoading, register } = useAuth();
+  const { user, loading: authLoading, loginWithGoogle, register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,6 +56,12 @@ function RegisterForm() {
   };
 
   const signInHref = requestedDestination ? loginHref(requestedDestination) : "/login";
+  const googleLogin = useCallback(async (credential: string) => {
+    setLoading(true); setError("");
+    try { const registeredUser = await loginWithGoogle(credential); router.replace(requestedDestination || (registeredUser.role === "ADMIN" ? "/admin" : "/products")); }
+    catch (caught) { setError(getErrorMessage(caught)); }
+    finally { setLoading(false); }
+  }, [loginWithGoogle, requestedDestination, router]);
   return <div className="mx-auto max-w-md py-10"><Card className="p-6 sm:p-8">
     <div className="page-heading"><p className="eyebrow mb-3">Join ShopStack</p><h1>Create account</h1><p>Create your customer account to place and track orders.</p></div>
     <form onSubmit={submit} className="grid gap-4" aria-busy={loading} noValidate>
@@ -64,6 +71,8 @@ function RegisterForm() {
       <div className="field"><label htmlFor="register-password">Password</label><PasswordField id="register-password" autoComplete="new-password" minLength={8} maxLength={72} value={password} onChange={(event) => setPassword(event.target.value)} required disabled={loading} /></div>
       <div className="field"><label htmlFor="confirm-password">Confirm password</label><PasswordField id="confirm-password" autoComplete="new-password" minLength={8} maxLength={72} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required disabled={loading} /></div>
       <Button type="submit" className="mt-2" disabled={loading || authLoading}>{loading ? "Creating account..." : "Create account"}</Button>
+      <div className="flex items-center gap-3 py-1 text-xs text-muted"><span className="h-px flex-1 bg-line" /><span>or</span><span className="h-px flex-1 bg-line" /></div>
+      <GoogleSignIn onCredential={googleLogin} disabled={loading || authLoading} />
       <p className="text-center text-sm text-muted">Already registered? <Link href={signInHref} className="font-semibold text-brand transition hover:text-brand-dark">Sign in</Link></p>
     </form>
   </Card></div>;

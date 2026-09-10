@@ -62,5 +62,5 @@ function CheckoutContent() {
 }
 
 export default function CheckoutPage() {
-  return <ProtectedPage><CheckoutContent /></ProtectedPage>;
+  return <ProtectedPage role="USER"><CheckoutContent /></ProtectedPage>;
 }

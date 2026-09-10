@@ -4,6 +4,7 @@ import type { AuthUser, CategoryStatus, OrderStatus, ProductStatus } from "./ent
 type AtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Omit<T, K>> }[keyof T];
 
 export type LoginInput = { email: string; password: string };
+export type GoogleLoginInput = { credential: string };
 export type RegisterInput = LoginInput & { name: string };
 export type AuthSession = { user: AuthUser; token: string };
 export type CreateUserInput = RegisterInput;
