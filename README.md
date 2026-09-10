@@ -10,6 +10,10 @@ The frontend is built with **Next.js, React, TypeScript, and Tailwind CSS** and 
 
 ![ShopStack Preview](./public/image/ShopStack.png)
 
+## 🚀 Live Demo
+
+[Visit the live ShopStack application](https://ecommerce-client-nu-six.vercel.app)
+
 ---
 
 ## ✨ Key Features
